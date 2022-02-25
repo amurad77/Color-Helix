@@ -58,4 +58,23 @@ public class Ball : MonoBehaviour
     {
         return currentColor;
     }
+
+    void OnTriggerEnter(Collider target)
+    {
+        if (target.tag == "Hit")
+        {
+            print("We Hit The wall");
+        }
+
+        if (target.tag == "Fail")
+        {
+            print("Game Over");
+        }
+
+        if(target.tag == "FinishLine")
+        {
+            print("LevelUp");
+        }
+
+    }
 }
