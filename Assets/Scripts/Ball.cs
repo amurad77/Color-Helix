@@ -11,8 +11,9 @@ public class Ball : MonoBehaviour
     private MeshRenderer meshRenderer;
 
     private float height = 0.58f, speed = 6;
+    private float lerpAmount;
 
-    private bool move;
+    private bool move, isRising;
 
 
     void Awake()
@@ -22,11 +23,14 @@ public class Ball : MonoBehaviour
 
     void Start()
     {
-        move = false;    
+        move = false;
+        SetColor(GameController.instance.hitColor);
     }
 
     void Update()
     {
+        print(PlayerPrefs.GetInt("Level", 1));
+
         if(Touch.IsPressing())
             move = true;
         
@@ -42,6 +46,14 @@ public class Ball : MonoBehaviour
     void UpdateColor()
     {
         meshRenderer.sharedMaterial.color = currentColor;
+        if(isRising)
+        {
+            currentColor = Color.Lerp(meshRenderer.material.color, GameObject.FindGameObjectWithTag("ColorBump").GetComponent<ColorBump>().GetColor()
+                , lerpAmount);
+            lerpAmount += Time.deltaTime;
+        }
+        if (lerpAmount >= 1)
+            isRising = false;
     }
 
     public static float GetZ()
@@ -63,18 +75,46 @@ public class Ball : MonoBehaviour
     {
         if (target.tag == "Hit")
         {
-            print("We Hit The wall");
+            Destroy(target.transform.parent.gameObject);
+        }
+
+        if (target.tag == "ColorBump")
+        {
+            lerpAmount = 0;
+            isRising = true;
         }
 
         if (target.tag == "Fail")
         {
-            print("Game Over");
+            StartCoroutine(GameOver());
         }
 
         if(target.tag == "FinishLine")
         {
-            print("LevelUp");
+            StartCoroutine(PlayNewLevel());
         }
 
+    }
+
+
+    IEnumerator PlayNewLevel()
+    {
+        Camera.main.GetComponent<CameraFollow>().enabled = false;
+        yield return new WaitForSeconds(1.5f);
+        move = false;
+        //Flash
+        PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
+        Camera.main.GetComponent<CameraFollow>().enabled = true;
+        Ball.z = 0;
+        GameController.instance.GenerateLevel();
+    }
+
+
+    IEnumerator GameOver()
+    {
+        GameController.instance.GenerateLevel();
+        Ball.z = 0;
+        move = false;
+        yield break;
     }
 }

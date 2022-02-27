@@ -8,6 +8,8 @@ TagManager:
   - FinishLine
   - Ball
   - Fail
+  - ColorBump
+  - Star
   layers:
   - Default
   - TransparentFX
