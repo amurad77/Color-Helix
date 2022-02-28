@@ -6,13 +6,13 @@ public class GameController : MonoBehaviour
 {
     public static GameController instance;
     public GameObject finishLine;
-    private GameObject[] walls2;
+    private GameObject[] walls2, walls1;
 
     public Color[] colors;
     [HideInInspector]
     public Color hitColor, failColor;
 
-    private int wallsSpawnNumber = 11;
+    private int wallsSpawnNumber = 11, wallsCount = 0, score;
     private float z = 7;
 
     private bool colorBump;
@@ -25,6 +25,11 @@ public class GameController : MonoBehaviour
 
     }
 
+    private void Update()
+    {
+        SumUpWalls();
+    }
+
     void Start()
     {
         
@@ -33,6 +38,7 @@ public class GameController : MonoBehaviour
 
     public void GenerateLevel()
     {
+        GenerateColors();
         
         if (PlayerPrefs.GetInt("Level") >= 1 && PlayerPrefs.GetInt("Level") <= 4)
             wallsSpawnNumber = 12;
@@ -58,6 +64,31 @@ public class GameController : MonoBehaviour
 
         Ball.SetColor(hitColor);
     }
+
+
+    void SumUpWalls()
+    {
+        walls1 = GameObject.FindGameObjectsWithTag("Wall1");
+
+        if (walls1.Length > wallsCount)
+            wallsCount = walls1.Length;
+
+        if (wallsCount > walls1.Length)
+        {
+            wallsCount = walls1.Length;
+            if (GameObject.Find("Ball").GetComponent<Ball>().perfectStar)
+            {
+                GameObject.Find("Ball").GetComponent<Ball>().perfectStar = false;
+                score += PlayerPrefs.GetInt("Level") * 2;
+            }
+            else
+            {
+                score += PlayerPrefs.GetInt("Level");
+            }
+        }
+    }
+
+
 
     void DeleteWalls()
     {

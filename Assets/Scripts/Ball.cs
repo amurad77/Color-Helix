@@ -9,16 +9,20 @@ public class Ball : MonoBehaviour
     private static Color currentColor;
 
     private MeshRenderer meshRenderer;
+    private SpriteRenderer splash;
 
     private float height = 0.58f, speed = 6;
     private float lerpAmount;
 
-    private bool move, isRising;
+    private bool move, isRising, gameOver;
+
+    public bool perfectStar;
 
 
     void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
+        splash = transform.GetChild(0).GetComponent<SpriteRenderer>();
     }
 
     void Start()
@@ -29,10 +33,12 @@ public class Ball : MonoBehaviour
 
     void Update()
     {
-        print(PlayerPrefs.GetInt("Level", 1));
 
-        if(Touch.IsPressing())
+        if(Touch.IsPressing() && !gameOver)
+        {
             move = true;
+            GetComponent<SphereCollider>().enabled = true;
+        }
         
         if (move)
             Ball.z += speed * 0.025f;
@@ -55,7 +61,7 @@ public class Ball : MonoBehaviour
         if (lerpAmount >= 1)
             isRising = false;
     }
-
+    
     public static float GetZ()
     {
         return Ball.z;
@@ -94,6 +100,11 @@ public class Ball : MonoBehaviour
             StartCoroutine(PlayNewLevel());
         }
 
+        if(target.tag == "Star")
+        {
+            perfectStar = true;
+        }
+
     }
 
 
@@ -102,7 +113,7 @@ public class Ball : MonoBehaviour
         Camera.main.GetComponent<CameraFollow>().enabled = false;
         yield return new WaitForSeconds(1.5f);
         move = false;
-        //Flash
+        Camera.main.GetComponent<CameraFollow>().Flash();
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
         Camera.main.GetComponent<CameraFollow>().enabled = true;
         Ball.z = 0;
@@ -112,9 +123,21 @@ public class Ball : MonoBehaviour
 
     IEnumerator GameOver()
     {
+        gameOver = true;
+        splash.color = currentColor;
+        splash.transform.position = new Vector3(0, 0.7f, Ball.z - 0.05f);
+        splash.transform.eulerAngles = new Vector3(0, 0, Random.value * 360);
+        splash.enabled = true;
+
+        meshRenderer.enabled = false;
+        GetComponent<SphereCollider>().enabled = false;
+        move = false;       
+        yield return new WaitForSeconds(1.5f);
+        Camera.main.GetComponent<CameraFollow>().Flash();
+        gameOver = false;
+        z = 0;
         GameController.instance.GenerateLevel();
-        Ball.z = 0;
-        move = false;
-        yield break;
+        splash.enabled = false;
+        meshRenderer.enabled = true;
     }
 }
